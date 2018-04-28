@@ -17,6 +17,6 @@ spec:
     spec:
       containers:
       - name: brick
-        image: andrewmyhre/wall-brick
+        image: andrewmyhre/brick
         ports:
         - containerPort: 80
