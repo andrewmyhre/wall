@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: brick
+spec:
+  selector:
+    matchLabels:
+      app: brick
+  template:
+    metadata:
+      labels:
+        app: brick
+    spec:
+      containers:
+      - name: brick
+        image: andrewmyhre/wall-brick
+        ports:
+        - containerPort: 80
