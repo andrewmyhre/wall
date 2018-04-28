@@ -10,13 +10,13 @@ spec:
       app: brick
     matchExpressions:
       - {key: app, operator: In, values: [brick]}
-    template:
-      metadata:
-        labels:
-          app: brick
-      spec:
-        containers:
-        - name: brick
-          image: andrewmyhre/wall-brick
-          ports:
-          - containerPort: 80
+  template:
+    metadata:
+      labels:
+        app: brick
+    spec:
+      containers:
+      - name: brick
+        image: andrewmyhre/wall-brick
+        ports:
+        - containerPort: 80
