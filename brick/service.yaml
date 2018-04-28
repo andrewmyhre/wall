@@ -3,6 +3,7 @@ apiVersion: v1
 metadata:
   name: brick
 spec:
+  type: LoadBalancer
   selector:
     app: brick
   ports:
