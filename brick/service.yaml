@@ -1,0 +1,10 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: brick
+spec:
+  selector:
+    app: brick
+  ports:
+  - port: 80
+    targetPort: 80
