@@ -23,3 +23,9 @@ body, html {
     opacity: .5;
     background-color: blue;
 }
+.brick img {
+    width: 200px;
+    height: 150px;
+    margin: 0;
+    padding: 0;
+}
