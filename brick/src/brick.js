@@ -29,6 +29,8 @@ $(document).ready(function() {
     // the only LC-specific thing we have to do
     var containerOne = document.getElementsByClassName('literally')[0];
 
+    console.log("devicePixelRatio:" + window.devicePixelRatio)
+
     var showLC = function() {
         lc = LC.init(containerOne, {
             snapshot: JSON.parse(localStorage.getItem('drawing-'+brick_id)),
@@ -43,7 +45,8 @@ $(document).ready(function() {
         base_image.src = api_host+'/bricks/'+brick_id;
         base_image.onload = function(){
             var b=$('.background')[0];
-            b.getContext("2d").drawImage(base_image, 0, 0, 1200, 675);
+            var ctx=b.getContext("2d");
+            ctx.drawImage(base_image, 0, 0, 1200, 675);
         }
         var b=$('.background')[0];
         b.width=lc.width;
@@ -75,10 +78,18 @@ $(document).ready(function() {
         $("#clear-lc").click(function() {
             lc.clear();
         });
+        $("#zoom-in").click(function() {
+            lc.zoom(0.1)
+            $('.background')[0].getContext("2d").scale(lc.scale,lc.scale)
+        });
+        $("#zoom-out").click(function() {
+            lc.zoom(-0.1)
+            $('.background')[0].getContext("2d").scale(lc.scale,lc.scale)
+        });
 
         $("#publish-lc").click(function() {
             console.log('publish image');
-            $('.background')[0].getContext("2d").drawImage(lc.getImage(),0,0);
+            $('.background')[0].getContext("2d").drawImage(lc.getImage({scaleDownRetina:true}),0,0);
             $('.literally').hide();
 
             $.ajax({
@@ -151,6 +162,10 @@ $(document).ready(function() {
             name: 'tool-polygon',
             el: document.getElementById('tool-polygon'),
             tool: new LC.tools.Polygon(lc)
+            },{
+            name: 'tool-pan',
+            el: document.getElementById('tool-pan'),
+            tool: new LC.tools.Pan(lc)
             },{
             name: 'tool-select',
             el: document.getElementById('tool-select'),
