@@ -66,6 +66,8 @@ $(document).ready(function() {
         contentType: false,
         success: function(xhr, status) {
             console.log("server returned " + status);
+            lc.clear();
+            save();
             window.location.href = "http://localhost:38001";
         },
         error: function(xhr, status) {
