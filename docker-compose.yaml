@@ -2,6 +2,41 @@ version: '3'
 services:
   brick:
     build: ./brick
-    image: andrewmyhre/brick:1
+    image: andrewmyhre/brick:latest
     ports:
       - "30080:80"
+    networks:
+     - default
+  mysql:
+    image: mysql:5.6
+    environment:
+      - MYSQL_ROOT_PASSWORD=diddle
+    ports:
+      - "3306"
+      - "33306:3306"
+    networks:
+     default:
+      aliases:
+        - wall-mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+  api:
+    build: ./api
+    image: andrewmyhre/api:latest
+    environment:
+      - MYSQL_PASSWORD=diddle
+      - MYSQL_USERNAME=root
+      - MYSQL_HOST=wall-mysql
+      - MYSQL_PORT=3306
+    ports:
+      - "38000:8000"
+    networks:
+     default:
+      aliases:
+        - wall-api
+    depends_on:
+      - mysql
+networks:
+  default:

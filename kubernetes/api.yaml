@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: api
+  namespace: wall
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: wall
+    matchExpressions:
+      - {key: tier, operator: In, values: [api]}
+  template:
+    metadata:
+      labels:
+        app: wall
+        tier: api
+    spec:
+      containers:
+      - name: api
+        image: andrewmyhre/api
+        ports:
+        - containerPort: 80
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: api
+spec:
+  type: LoadBalancer
+  selector:
+    app: wall
+    tier: api
+  ports:
+  - port: 80
+    targetPort: 8000
