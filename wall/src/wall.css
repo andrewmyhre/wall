@@ -5,8 +5,8 @@ body, html {
     padding:0;
 }
 #wall {
-    width: 100%;
-    height:100%;
+    width: 7680px;
+    height: 4320px;
 }
 .brick {
     width: 240px;
