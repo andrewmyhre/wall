@@ -1,7 +1,12 @@
-api_host='http://wall-api.andrew-myhre.com'
-// api_host='http://localhost:38000'
-brick_host='http://brick.andrew-myhre.com'
-//brick_host='http://localhost:30080'
+if (window.location.hostname == 'localhost') {
+    api_host='http://localhost:38000'
+    brick_host='http://localhost:30080'
+    wall_host='http://localhost:38001'
+} else {
+    api_host='http://wall-api.andrew-myhre.com'
+    brick_host='http://brick.andrew-myhre.com'
+    wall_host='http://wall.andrew-myhre.com'
+}
 
 function buildBrickHash(bricks) {
     var bricksHash=new Object();

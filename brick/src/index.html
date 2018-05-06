@@ -18,9 +18,8 @@
       .fs-container {
        width: 1200px;
        height:675px;
-       margin-left: auto;
-       margin-right: auto;
-       margin-top:100px;
+       margin-left: 0px;
+       margin-top:0px;
       }
 
       .literally {
@@ -77,7 +76,7 @@
       }
 
       .toolbar {
-        position:absolute;
+        position:fixed;
         z-index:100;
         top:0px;
         left:0px;
@@ -93,16 +92,11 @@
 
       <div class="toolbar">
         <div class="toolset">
-          <span class='toolLabel'>Actions:</span>
-          <a href="javascript:void(0);" class='tool' id="open-image">Open image</a>
-          <a href="javascript:void(0);" class='tool' id="change-size">Change size</a>
-          <a href="javascript:void(0);" class='tool' id="reset-size">Reset size</a>
-          <a href="javascript:void(0);" class='tool' id="hide-lc">Teardown</a>
-          <a href="javascript:void(0);" class='tool' id="show-lc">Setup</a>
-          <a href="javascript:void(0);" class='tool' id="clear-lc">Clear</a>
+          <a href="javascript:void(0);" class='tool' id="clear-lc">Reset</a>
           <a href="javascript:void(0);" class='tool' id="publish-lc">Publish</a>
         </div>
 
+        <!--
         <div class="toolset">
           <span class='toolLabel'>Tools:</span>
           <a href="javascript:void(0);" class='tool' id="tool-pencil">Pencil</a>
@@ -116,13 +110,16 @@
           <a href="javascript:void(0);" class='tool' id="tool-polygon">Polygon</a>
           <a href="javascript:void(0);" class='tool' id="tool-select">Select</a>
         </div>
+        -->
 
+        <!--
         <div class="toolset" id="tools-colors">
           <span class='toolLabel'>Colors:</span>
           <a href="javascript:void(0);" class='tool' id="colorTool-black">Black</a>
           <a href="javascript:void(0);" class='tool' id="colorTool-blue">Blue</a>
           <a href="javascript:void(0);" class='tool' id="colorTool-red">Red</a>
         </div>
+        -->
       </div>
 
       <br>
