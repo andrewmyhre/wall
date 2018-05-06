@@ -9,8 +9,8 @@ body, html {
     height:100%;
 }
 .brick {
-    width: 200px;
-    height: 150px;
+    width: 240px;
+    height: 135px;
     display:inline-block;
     background-color: white;
 }
@@ -24,8 +24,8 @@ body, html {
     background-color: blue;
 }
 .brick img {
-    width: 200px;
-    height: 150px;
+    width: 240px;
+    height: 135px;
     margin: 0;
     padding: 0;
 }

@@ -8,6 +8,9 @@ if (window.location.hostname == 'localhost') {
     wall_host='http://wall.andrew-myhre.com'
 }
 
+row_length=Math.floor(screen.width/240);
+column_length=Math.floor(screen.height/135);
+
 function buildBrickHash(bricks) {
     var bricksHash=new Object();
     $.each(bricks, function(i, brick) {
@@ -18,8 +21,8 @@ function buildBrickHash(bricks) {
 
 function render(bricksHash) {
     var i=0;
-    for (var y=1; y<10; y++) {
-        for (var x=1; x<10; x++) {
+    for (var y=1; y<=column_length; y++) {
+        for (var x=1; x<=row_length; x++) {
             brick_id=x+","+y;
             brick=bricksHash[brick_id];
             var brick_element=$("#wall #"+brick_id)[0]

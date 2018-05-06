@@ -15,9 +15,9 @@ $(document).ready(function() {
         return;
     }
     brick_id=window.location.hash.substring(1);
-    var img = new Image()
-    img.crossOrigin='Anonymous';
-    img.src = api_host+'/bricks/'+brick_id;
+    //var img = new Image()
+    //img.crossOrigin='Anonymous';
+    //img.src = api_host+'/bricks/'+brick_id;
     var lc = null;
     var tools;
     var strokeWidths;
@@ -30,19 +30,24 @@ $(document).ready(function() {
     var containerOne = document.getElementsByClassName('literally')[0];
 
     var showLC = function() {
-        //scale=1/window.devicePixelRatio;
-        //scale=screen.width / $('.literally').width()
-        //console.log(scale);
         lc = LC.init(containerOne, {
             snapshot: JSON.parse(localStorage.getItem('drawing-'+brick_id)),
             defaultStrokeWidth: 10,
             strokeWidths: [10, 20, 50],
             secondaryColor: 'transparent',
-            imageSize: {width: 1200, height: 675},
-            watermarkImage: img,
-            //watermarkScale: scale
+            imageSize: {width: 1200, height: 675}
         });
-        //lc.setZoom(scale)
+
+        base_image = new Image();
+        base_image.crossOrigin='Anonymous';
+        base_image.src = api_host+'/bricks/'+brick_id;
+        base_image.onload = function(){
+            var b=$('.background')[0];
+            b.getContext("2d").drawImage(base_image, 0, 0, 1200, 675);
+        }
+        var b=$('.background')[0];
+        b.width=lc.width;
+        b.height=lc.height;
         window.demoLC = lc;
 
         var save = function() {
@@ -73,28 +78,30 @@ $(document).ready(function() {
 
         $("#publish-lc").click(function() {
             console.log('publish image');
+            $('.background')[0].getContext("2d").drawImage(lc.getImage(),0,0);
+            $('.literally').hide();
+
             $.ajax({
-            url: api_host+"/bricks/"+brick_id,
-            type: "PUT",
-            dataType: "json",
-            data: JSON.stringify({
-                imagedata: lc.getImage().toDataURL(),
-                imagejson: JSON.stringify(lc.getSnapshot())
-            }),
-            processData: false,
-            contentType: false,
-            success: function(xhr, status) {
-                console.log("server returned " + status);
-                lc.clear();
-                save();
-                window.location.href = wall_host;
-            },
-            error: function(xhr, status) {
-                console.log("error occurred:" + status);
-            },
-            complete: function(xhr, status) {
-                console.log("server returned " + status);
-            }
+                url: api_host+"/bricks/"+brick_id,
+                type: "PUT",
+                dataType: "json",
+                data: JSON.stringify({
+                    imagedata: $('.background')[0].toDataURL()
+                }),
+                processData: false,
+                contentType: false,
+                success: function(xhr, status) {
+                    console.log("server returned " + status);
+                    lc.clear();
+                    save();
+                    window.location.href = wall_host;
+                },
+                error: function(xhr, status) {
+                    console.log("error occurred:" + status);
+                },
+                complete: function(xhr, status) {
+                    console.log("server returned " + status);
+                }
             });
         });
 
