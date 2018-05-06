@@ -186,8 +186,8 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/hello", GetHello).Methods("GET")
 	router.HandleFunc("/bricks", GetBricks).Methods("GET")
-	router.HandleFunc("/bricks/{id:[0-9,-]+}", PutBrick).Methods("PUT")
-	router.HandleFunc("/bricks/{id:[0-9,-]+}", GetBrickImage).Methods("GET")
+	router.HandleFunc("/bricks/{id:[0-9_,-]+}", PutBrick).Methods("PUT")
+	router.HandleFunc("/bricks/{id:[0-9_,-]+}", GetBrickImage).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":8000", handlers.CORS(
 		handlers.AllowedOrigins([]string{"*"}),
