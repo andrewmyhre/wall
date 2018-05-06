@@ -1,0 +1,25 @@
+body, html {
+    width: 100%;
+    height: 100%;
+    margin:0;
+    padding:0;
+}
+#wall {
+    width: 100%;
+    height:100%;
+}
+.brick {
+    width: 200px;
+    height: 150px;
+    display:inline-block;
+    background-color: white;
+}
+.brick a {
+    width: 100%;
+    height: 100%;
+    display: inline-block;
+}
+.brick a:hover {
+    opacity: .5;
+    background-color: blue;
+}

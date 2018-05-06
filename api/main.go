@@ -22,13 +22,17 @@ var shared_db *sql.DB
 
 type Brick struct {
 	ID               string `json:"id,omitempty"`
-	ImageStoragePath string `json:"imageStoragePath,omitempty"`
+	ImageStoragePath string `json:"url,omitempty"`
 	CreationDate     string `json: "creationDate,omitempty"`
 	ETag             string `json: "etag,omitempty"`
 }
 
 type ImageDataPackage struct {
 	ImageData string `json:"imagedata,omitempty"`
+}
+
+type PublishBrickResponse struct {
+	Result string `json:"result,omitempty"`
 }
 
 func get_brick(db *sql.DB, id string) Brick {
@@ -241,6 +245,11 @@ func PutBrick(w http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
 	upsert_brick(shared_db, brick)
+	w.WriteHeader(http.StatusOK)
+
+	result := PublishBrickResponse{Result: "OK"}
+	json.NewEncoder(w).Encode(result)
+
 }
 
 func GetHello(w http.ResponseWriter, r *http.Request) {
@@ -255,7 +264,8 @@ func GetBrickImage(w http.ResponseWriter, r *http.Request) {
 
 	imagedata, err := ioutil.ReadFile(brick.ImageStoragePath)
 	if err != nil {
-		log.Fatal(err)
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
 	log.Println(brick.ImageStoragePath)

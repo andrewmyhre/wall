@@ -38,5 +38,16 @@ services:
         - wall-api
     depends_on:
       - mysql
+  wall:
+    build: ./wall
+    image: andrewmyhre/wall:latest
+    ports:
+      - "38001:80"
+    networks:
+      default:
+        aliases:
+          - wall
+    depends_on:
+      - api
 networks:
   default:
