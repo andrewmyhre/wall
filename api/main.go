@@ -49,7 +49,6 @@ func get_brick(db *sql.DB, id string) Brick {
 	}
 	defer stmtOut.Close()
 
-	log.Println(db)
 	rows, err := stmtOut.Query(id)
 	if err != nil {
 		log.Fatal(err)
@@ -60,7 +59,6 @@ func get_brick(db *sql.DB, id string) Brick {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Println(id)
 		brick = Brick{ID: id, ImageStoragePath: imageStoragePath, ETag: eTag, CreationDate: creationDate}
 	}
 	err = rows.Err()
@@ -79,7 +77,6 @@ func get_bricks(db *sql.DB) []Brick {
 		bricks           []Brick
 	)
 
-	log.Println(db)
 	rows, err := db.Query("select ID, ImageStoragePath, ETag, CreationDate from bricks")
 	if err != nil {
 		log.Fatal(err)
@@ -90,7 +87,7 @@ func get_bricks(db *sql.DB) []Brick {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Println(id)
+
 		bricks = append(bricks, Brick{ID: id, ImageStoragePath: imageStoragePath, ETag: eTag, CreationDate: creationDate})
 	}
 	err = rows.Err()
@@ -178,7 +175,7 @@ func create_database() {
 func main() {
 	create_database()
 	s := []string{os.Getenv("MYSQL_USERNAME"), ":", os.Getenv("MYSQL_PASSWORD"), "@tcp(", os.Getenv("MYSQL_HOST"), ":", os.Getenv("MYSQL_PORT"), ")/wall"}
-	log.Print(strings.Join(s, ""))
+
 	db, err := sql.Open("mysql", strings.Join(s, ""))
 	if err != nil {
 		log.Fatal(err)
