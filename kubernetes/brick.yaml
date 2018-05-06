@@ -3,12 +3,13 @@ kind: ReplicaSet
 metadata:
   name: brick
   namespace: wall
-  app: wall
+  labels:
+    app: wall
+    tier: brick
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: wall
       tier: brick
     matchExpressions:
       - {key: tier, operator: In, values: [brick]}
@@ -21,6 +22,7 @@ spec:
       containers:
       - name: brick
         image: andrewmyhre/brick
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
 ---

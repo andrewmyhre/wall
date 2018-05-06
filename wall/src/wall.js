@@ -1,3 +1,8 @@
+api_host='http://wall-api.andrew-myhre.com'
+// api_host='http://localhost:38000'
+brick_host='http://brick.andrew-myhre.com'
+//brick_host='http://localhost:30080'
+
 function buildBrickHash(bricks) {
     var bricksHash=new Object();
     $.each(bricks, function(i, brick) {
@@ -15,7 +20,7 @@ function render(bricksHash) {
             var brick_element=$("#wall #"+brick_id)[0]
             if (brick_element == null)  {
                 brick_element=$("<div class='brick' />");
-                var a=$("<a id='"+brick_id+"' href='http://localhost:30080/#"+brick_id+"' />");
+                var a=$("<a id='"+brick_id+"' href='"+brick_host+"/#"+brick_id+"' />");
                 
                 brick_element.append(a);
 
@@ -27,7 +32,7 @@ function render(bricksHash) {
                 }
             }
             if (brick != null) {
-                $(brick_element.children()[0]).html("<img src='http://localhost:38000"+brick.url+"' width=200 />");
+                $(brick_element.children()[0]).html("<img src='"+api_host+brick.url+"' width=200 />");
             }
             i++;
         }
@@ -38,7 +43,7 @@ function render(bricksHash) {
 $(document).ready(function(){
     var wall=$("#wall");
     var bricks=null;
-    $.getJSON('http://localhost:38000/bricks', function(response) {
+    $.getJSON(api_host+'/bricks', function(response) {
         bricks=response;
         bricksHash=buildBrickHash(bricks);
         render(bricksHash);

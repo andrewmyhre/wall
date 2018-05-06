@@ -1,3 +1,9 @@
+api_host='http://wall-api.andrew-myhre.com'
+// api_host='http://localhost:38000'
+brick_host='http://brick.andrew-myhre.com'
+//brick_host='http://localhost:30080'
+wall_host='http://wall.andrew-myhre.com'
+//wall_host='http://localhost:38001'
 zoom_level=1;
 $(document).ready(function() {
     if (!window.location.hash) {
@@ -7,7 +13,7 @@ $(document).ready(function() {
     brick_id=window.location.hash.substring(1);
     var img = new Image()
     img.crossOrigin='Anonymous';
-    img.src = 'http://localhost:38000/bricks/'+brick_id;
+    img.src = api_host+'/'+brick_id;
     var lc = null;
     var tools;
     var strokeWidths;
@@ -58,7 +64,7 @@ $(document).ready(function() {
     $("#publish-lc").click(function() {
         console.log('publish image');
         $.ajax({
-        url: "http://localhost:38000/bricks/"+brick_id,
+        url: api_host+"/bricks/"+brick_id,
         type: "PUT",
         dataType: "json",
         data: JSON.stringify({imagedata: lc.getImage().toDataURL()}),
@@ -68,7 +74,7 @@ $(document).ready(function() {
             console.log("server returned " + status);
             lc.clear();
             save();
-            window.location.href = "http://localhost:38001";
+            window.location.href = wall_host;
         },
         error: function(xhr, status) {
             console.log("error occurred:" + status);

@@ -3,11 +3,14 @@ kind: ReplicaSet
 metadata:
   name: api
   namespace: wall
+  labels:
+    app: wall
+    tier: api
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: wall
+      tier: api
     matchExpressions:
       - {key: tier, operator: In, values: [api]}
   template:
@@ -19,8 +22,18 @@ spec:
       containers:
       - name: api
         image: andrewmyhre/api
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
+        env:
+        - name: MYSQL_PASSWORD
+          value: diddle
+        - name: MYSQL_USERNAME
+          value: root
+        - name: MYSQL_HOST
+          value: wall-mysql
+        - name: MYSQL_PORT
+          value: "3306"
 ---
 kind: Service
 apiVersion: v1
