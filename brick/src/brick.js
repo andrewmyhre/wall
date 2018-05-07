@@ -28,9 +28,7 @@ $(document).ready(function() {
 
     // the only LC-specific thing we have to do
     var containerOne = document.getElementsByClassName('literally')[0];
-
-    console.log("devicePixelRatio:" + window.devicePixelRatio)
-
+    
     var showLC = function() {
         lc = LC.init(containerOne, {
             snapshot: JSON.parse(localStorage.getItem('drawing-'+brick_id)),
@@ -88,7 +86,6 @@ $(document).ready(function() {
         });
 
         $("#publish-lc").click(function() {
-            console.log('publish image');
             $('.background')[0].getContext("2d").drawImage(lc.getImage({scaleDownRetina:true}),0,0);
             $('.literally').hide();
 
@@ -102,16 +99,13 @@ $(document).ready(function() {
                 processData: false,
                 contentType: false,
                 success: function(xhr, status) {
-                    console.log("server returned " + status);
                     lc.clear();
                     save();
                     window.location.href = wall_host;
                 },
                 error: function(xhr, status) {
-                    console.log("error occurred:" + status);
                 },
                 complete: function(xhr, status) {
-                    console.log("server returned " + status);
                 }
             });
         });
@@ -170,7 +164,14 @@ $(document).ready(function() {
             name: 'tool-select',
             el: document.getElementById('tool-select'),
             tool: new LC.tools.SelectShape(lc)
+            },{
+                name: 'tool-brush',
+                el: document.getElementById('tool-brush'),
+                tool: function() {
+                    return new Brush(lc)
+                }(LC.tools.ToolWithStroke)
             }
+
         ];
 
         strokeWidths = [
@@ -287,9 +288,7 @@ $( window ).resize(function() {
 
 function set_canvas_height() {
     aspect_ratio=$(document).width() / $(document).height();
-    console.log('aspect ratio:'+aspect_ratio)
     new_height=Math.floor($('.fs-container').width()/aspect_ratio);
-    console.log('resizing fs-container to '+new_height+'px');
     $('.fs-container').height(new_height+'px');
     //window.demoLC.setImageSize($('.fs-container').width(),new_height)
 }
