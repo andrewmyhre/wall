@@ -113,6 +113,13 @@ $(document).ready(function() {
         // Set up our own tools...
         tools = [
             {
+                name: 'tool-brush',
+                el: document.getElementById('tool-brush'),
+                tool: function() {
+                    return new Brush(lc)
+                }(LC.tools.ToolWithStroke)
+            }
+            /*,{
             name: 'pencil',
             el: document.getElementById('tool-pencil'),
             tool: new LC.tools.Pencil(lc)
@@ -164,13 +171,7 @@ $(document).ready(function() {
             name: 'tool-select',
             el: document.getElementById('tool-select'),
             tool: new LC.tools.SelectShape(lc)
-            },{
-                name: 'tool-brush',
-                el: document.getElementById('tool-brush'),
-                tool: function() {
-                    return new Brush(lc)
-                }(LC.tools.ToolWithStroke)
-            }
+            }*/
 
         ];
 
@@ -235,6 +236,7 @@ $(document).ready(function() {
             });
         });
         setCurrentByName(tools, tools[0].name);
+        lc.setTool(tools[0].tool);
 
         // Wire Stroke Widths
         // NOTE: This will not work until the stroke width PR is merged...
