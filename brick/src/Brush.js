@@ -28,14 +28,14 @@ var Brush = function(lc) {  // take lc as constructor arg
       didBecomeActive: function(lc) {
         var onPointerDown = function(pt) {
           self.currentShape = LC.createShape('LinePath');
-          self.currentShape.addPoint(LC.createShape('Point', { x: pt.x, y: pt.y, size: lc.tool.strokeWidth, color: this.color }));
+          self.currentShape.addPoint(LC.createShape('Point', { x: pt.x, y: pt.y, size: lc.tool.strokeWidth, color: lc.getColor('primary') }));
           lc.setShapesInProgress([self.currentShape]);
         };
   
         var onPointerDrag = function(pt) {
           pointSize=self.vary(lc);
           
-          self.currentShape.addPoint(LC.createShape('Point', { x: pt.x, y: pt.y, size: pointSize, color: this.color }));
+          self.currentShape.addPoint(LC.createShape('Point', { x: pt.x, y: pt.y, size: pointSize, color: lc.getColor('primary') }));
           lc.drawShapeInProgress(self.currentShape);
         };
   

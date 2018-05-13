@@ -282,6 +282,18 @@ $(document).ready(function() {
     //console.log('set height');
     //$('.fs-container').height('2000px');
     //set_canvas_height();
+
+    $("#color-picker").spectrum({
+        showButtons: false,
+        change: function(color) {
+            window.demoLC.setColor('primary', color.toRgbString())
+            $('#color-picker').css('color',color.toRgbString())
+        },
+        move: function(color) {
+            window.demoLC.setColor('primary', color.toRgbString())
+            $('#color-picker').css('color',color.toRgbString())
+        }
+    });
 });
 
 $( window ).resize(function() {
@@ -294,3 +306,9 @@ function set_canvas_height() {
     $('.fs-container').height(new_height+'px');
     //window.demoLC.setImageSize($('.fs-container').width(),new_height)
 }
+
+// function update(picker) {
+//     console.log('setting primary color:' + picker.toRGBString())
+//     window.demoLC.setColor('primary', picker.toRGBString())
+// }
+

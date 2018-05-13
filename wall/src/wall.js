@@ -39,7 +39,7 @@ function render(bricksHash) {
                 }
             }
             if (brick != null) {
-                $($(brick_element).children()[0]).html("<img src='"+api_host+brick.url+"' width=200 />");
+                $($(brick_element).children()[0]).html("<img src='"+api_host+brick.thumbnail_url+"' width=200 />");
             }
             i++;
         }
