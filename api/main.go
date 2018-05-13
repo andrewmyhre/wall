@@ -240,13 +240,13 @@ func PutBrick(w http.ResponseWriter, req *http.Request) {
 
 	imagePath_Full := fmt.Sprintf("/bricks/%s.png", vars["id"])
 	imagePath_Thumbnail := fmt.Sprintf("/bricks/%s_t.jpg", vars["id"])
-	f, err := os.Create("/bricks/" + vars["id"])
+	f, err := os.Create(imagePath_Full)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer f.Close()
 	n2, err := f.Write(imageData)
-	log.Println(fmt.Sprintf("wrote %d bytes to %s\n", n2, "/bricks/"+vars["id"]))
+	log.Println(fmt.Sprintf("wrote %d bytes to %s\n", n2, imagePath_Full))
 
 	treat_image(imagePath_Full, "", "")
 
