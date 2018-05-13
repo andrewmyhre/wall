@@ -32,6 +32,8 @@ services:
       - MYSQL_PORT=3306
     ports:
       - "38000:8000"
+    volumes:
+      - ~/bricks:/bricks
     networks:
      default:
       aliases:

@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-gl/gl/v4.1-core/gl"
+	_ "github.com/go-gl/mathgl/mgl32"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -202,6 +204,7 @@ func main() {
 		handlers.AllowedMethods([]string{"POST", "PUT"}),
 		handlers.AllowedHeaders([]string{"Content-Type", "X-Requested-With"}),
 	)(router)))
+
 }
 
 func GetBricks(w http.ResponseWriter, req *http.Request) {
@@ -235,7 +238,7 @@ func PutBrick(w http.ResponseWriter, req *http.Request) {
 
 	vars := mux.Vars(req)
 
-	imagePath_Full := fmt.Sprintf("/bricks/%s", vars["id"])
+	imagePath_Full := fmt.Sprintf("/bricks/%s.png", vars["id"])
 	imagePath_Thumbnail := fmt.Sprintf("/bricks/%s_t.jpg", vars["id"])
 	f, err := os.Create("/bricks/" + vars["id"])
 	if err != nil {
@@ -244,6 +247,8 @@ func PutBrick(w http.ResponseWriter, req *http.Request) {
 	defer f.Close()
 	n2, err := f.Write(imageData)
 	log.Println(fmt.Sprintf("wrote %d bytes to %s\n", n2, "/bricks/"+vars["id"]))
+
+	treat_image(imagePath_Full, "", "")
 
 	imageReader, err := os.Open(imagePath_Full)
 	if err != nil {
@@ -316,4 +321,12 @@ func GetBrickThumbnail(w http.ResponseWriter, r *http.Request) {
 
 	log.Println(brick.ImageStoragePath)
 	w.Write(imagedata)
+}
+
+func treat_image(image_path, vertexShaderSource, fragmentShaderSource string) {
+	if err := gl.Init(); err != nil {
+		panic(err)
+	}
+	version := gl.GoStr(gl.GetString(gl.VERSION))
+	log.Println("OpenGL version", version)
 }
