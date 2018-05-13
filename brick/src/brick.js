@@ -1,3 +1,7 @@
+"use strict";
+
+var api_host, brick_host, wall_host;
+var zoom_level, brick_id, base_image, shaderCanvas, gl, program;
 if (window.location.hostname == 'localhost') {
     api_host='http://localhost:38000'
     brick_host='http://localhost:30080'
@@ -41,21 +45,396 @@ $(document).ready(function() {
         base_image = new Image();
         base_image.crossOrigin='Anonymous';
         base_image.src = api_host+'/bricks/'+brick_id;
-        base_image.onload = function(){
-            var b=$('.background')[0];
-            var ctx=b.getContext("2d");
-            ctx.drawImage(base_image, 0, 0, 1200, 675);
-        }
+        
         var b=$('.background')[0];
         b.width=lc.width;
         b.height=lc.height;
         window.demoLC = lc;
+
+        shaderCanvas=document.getElementById('shaderCanvas');
+        shaderCanvas.width=lc.width;
+        shaderCanvas.height=lc.height;
+
+        gl = shaderCanvas.getContext('webgl', {preserveDrawingBuffer: true});
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+        var buffer;
+        buffer=gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(
+            gl.ARRAY_BUFFER, 
+            new Float32Array([
+              -1.0, -1.0, 
+               1.0, -1.0, 
+              -1.0,  1.0, 
+              -1.0,  1.0, 
+               1.0, -1.0, 
+               1.0,  1.0]), 
+            gl.STATIC_DRAW
+          );
+        
+        function drawImage(program, tex, texWidth, texHeight, dstX, dstY) {
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            
+            // Tell WebGL to use our shader program pair
+            gl.useProgram(program);
+            
+            // Setup the attributes to pull data from our buffers
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+            gl.enableVertexAttribArray(texcoordLocation);
+            gl.vertexAttribPointer(texcoordLocation, 2, gl.FLOAT, false, 0, 0);
+            
+            // this matirx will convert from pixels to clip space
+            var matrix = m4.orthographic(0, gl.canvas.width, gl.canvas.height, 0, -1, 1);
+            
+            // this matrix will translate our quad to dstX, dstY
+            matrix = m4.translate(matrix, dstX, dstY, 0);
+            
+            // this matrix will scale our 1 unit quad
+            // from 1 unit to texWidth, texHeight units
+            matrix = m4.scale(matrix, texWidth, texHeight, 1);
+            
+            // Set the matrix.
+            gl.uniformMatrix4fv(matrixLocation, false, matrix);
+            
+            // Tell the shader to get the texture from texture unit 0
+            gl.uniform1i(textureLocation, 0);
+            
+            // draw the quad (2 triangles, 6 vertices)
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+        }
+
+        function verifyShaderCompiled(shader) {
+            var compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+            if (!compiled)
+            {
+                var compilationLog = gl.getShaderInfoLog(shader);
+                console.log(shader + ': ' + compilationLog);
+                return false;
+            }
+            return true;
+        }
+
+        var vertexShader;
+        var fragmentShader;
+
+        var vertexShaderSource = `
+        attribute vec4 a_position;
+        attribute vec2 a_texCoord;
+        
+        uniform mat4 u_matrix;
+        
+        varying vec2 v_texCoord;
+        
+        void main() {
+        gl_Position = u_matrix * a_position;
+        v_texCoord = a_texCoord;
+        }`;
+
+        var fragmentShaderSource = `
+        precision mediump float;
+ 
+        varying vec2 v_texCoord;
+        uniform sampler2D u_image;
+        uniform vec2 u_textureSize;
+        uniform float u_kernel[9];
+        uniform float u_kernelWeight;
+        
+        void main() {
+            vec2 onePixel = vec2(1.0, 1.0) / u_textureSize;
+            vec4 colorSum =
+                texture2D(u_image, v_texCoord + onePixel * vec2(-1, -1)) * u_kernel[0] +
+                texture2D(u_image, v_texCoord + onePixel * vec2( 0, -1)) * u_kernel[1] +
+                texture2D(u_image, v_texCoord + onePixel * vec2( 1, -1)) * u_kernel[2] +
+                texture2D(u_image, v_texCoord + onePixel * vec2(-1,  0)) * u_kernel[3] +
+                texture2D(u_image, v_texCoord + onePixel * vec2( 0,  0)) * u_kernel[4] +
+                texture2D(u_image, v_texCoord + onePixel * vec2( 1,  0)) * u_kernel[5] +
+                texture2D(u_image, v_texCoord + onePixel * vec2(-1,  1)) * u_kernel[6] +
+                texture2D(u_image, v_texCoord + onePixel * vec2( 0,  1)) * u_kernel[7] +
+                texture2D(u_image, v_texCoord + onePixel * vec2( 1,  1)) * u_kernel[8] ;
+            
+            // Divide the sum by the weight but just use rgb
+            // we'll set alpha to 1.0
+            //vec4 colorSum = texture2D(u_image, v_texCoord + onePixel * vec2( 0,  0)) * u_kernel[4];
+            gl_FragColor = colorSum;
+        }`;
+
+        var kernelInUse='emboss';
+        var kernels = {
+            normal: [
+              0, 0, 0,
+              0, 1, 0,
+              0, 0, 0
+            ],
+            gaussianBlur: [
+              0.045, 0.122, 0.045,
+              0.122, 0.332, 0.122,
+              0.045, 0.122, 0.045
+            ],
+            gaussianBlur2: [
+              1, 2, 1,
+              2, 4, 2,
+              1, 2, 1
+            ],
+            gaussianBlur3: [
+              0, 1, 0,
+              1, 1, 1,
+              0, 1, 0
+            ],
+            unsharpen: [
+              -1, -1, -1,
+              -1,  9, -1,
+              -1, -1, -1
+            ],
+            sharpness: [
+               0,-1, 0,
+              -1, 5,-1,
+               0,-1, 0
+            ],
+            sharpen: [
+               -1, -1, -1,
+               -1, 16, -1,
+               -1, -1, -1
+            ],
+            edgeDetect: [
+               -0.125, -0.125, -0.125,
+               -0.125,  1,     -0.125,
+               -0.125, -0.125, -0.125
+            ],
+            edgeDetect2: [
+               -1, -1, -1,
+               -1,  8, -1,
+               -1, -1, -1
+            ],
+            edgeDetect3: [
+               -5, 0, 0,
+                0, 0, 0,
+                0, 0, 5
+            ],
+            edgeDetect4: [
+               -1, -1, -1,
+                0,  0,  0,
+                1,  1,  1
+            ],
+            edgeDetect5: [
+               -1, -1, -1,
+                2,  2,  2,
+               -1, -1, -1
+            ],
+            edgeDetect6: [
+               -5, -5, -5,
+               -5, 39, -5,
+               -5, -5, -5
+            ],
+            sobelHorizontal: [
+                1,  2,  1,
+                0,  0,  0,
+               -1, -2, -1
+            ],
+            sobelVertical: [
+                1,  0, -1,
+                2,  0, -2,
+                1,  0, -1
+            ],
+            previtHorizontal: [
+                1,  1,  1,
+                0,  0,  0,
+               -1, -1, -1
+            ],
+            previtVertical: [
+                1,  0, -1,
+                1,  0, -1,
+                1,  0, -1
+            ],
+            boxBlur: [
+                0.111, 0.111, 0.111,
+                0.111, 0.111, 0.111,
+                0.111, 0.111, 0.111
+            ],
+            triangleBlur: [
+                0.0625, 0.125, 0.0625,
+                0.125,  0.25,  0.125,
+                0.0625, 0.125, 0.0625
+            ],
+            emboss: [
+               -2, -1,  0,
+               -1,  1,  1,
+                0,  1,  2
+            ]
+          };
+
+        vertexShader = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vertexShader, vertexShaderSource);
+        gl.compileShader(vertexShader);
+        console.log ("verifying vertexShader");
+        if (!verifyShaderCompiled(vertexShader)) {
+            return;
+        }
+    
+        fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fragmentShader, fragmentShaderSource);
+        gl.compileShader(fragmentShader);
+        console.log ("verifying fragmentShader");
+        if (!verifyShaderCompiled(fragmentShader)) {
+        return;
+        }
+
+        program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);	
+        gl.getProgramInfoLog(program);
+        gl.useProgram(program);
+
+        // look up where the vertex data needs to go.
+        var positionLocation = gl.getAttribLocation(program, "a_position");
+        var texcoordLocation = gl.getAttribLocation(program, "a_texCoord");
+        var textureSizeLocation = gl.getUniformLocation(program, "u_textureSize");
+        var kernelLocation = gl.getUniformLocation(program, "u_kernel[0]");
+        var kernelWeightLocation = gl.getUniformLocation(program, "u_kernelWeight");
+
+        function computeKernelWeight(kernel) {
+            var weight = kernel.reduce(function(prev, curr) {
+                return prev + curr;
+            });
+            return weight <= 0 ? 1 : weight;
+        }
+
+        // lookup uniforms
+        var matrixLocation = gl.getUniformLocation(program, "u_matrix");
+        var textureLocation = gl.getUniformLocation(program, "u_image");
+
+        var positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    
+        // Put a unit quad in the buffer
+        var positions = [
+        0, 0,
+        0, 1,
+        1, 0,
+        1, 0,
+        0, 1,
+        1, 1,
+        ]
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        // Create a buffer for texture coords
+        var texcoordBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+
+        // Put texcoords in the buffer
+        var texcoords = [
+            0, 0,
+            0, 1,
+            1, 0,
+            1, 0,
+            0, 1,
+            1, 1,
+        ]
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texcoords), gl.STATIC_DRAW);
+        
+        
+        base_image.onload = function()
+        {
+            var b=$('.background')[0];
+            var ctx=b.getContext("2d");
+            ctx.drawImage(base_image, 0, 0, 1200, 675);
+        }
+
+        function drawContextToGl(ctx) {
+            var tex = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, ctx.getImageData(0,0,1200,675));
+
+            // let's assume all images are not a power of 2
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.uniform2f(textureSizeLocation, 1200, 675);
+            gl.uniform1fv(kernelLocation, kernels[kernelInUse]);
+            gl.uniform1f(kernelWeightLocation, computeKernelWeight(kernels[kernelInUse]));
+    
+            // Setup the attributes to pull data from our buffers
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+            var size = 2;          // 2 components per iteration
+            var type = gl.FLOAT;   // the data is 32bit floats
+            var normalize = false; // don't normalize the data
+            var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+            var offset = 0;        // start at the beginning of the buffer
+            gl.vertexAttribPointer(
+                positionLocation, size, type, normalize, stride, offset)
+
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+            // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+            var size = 2;          // 2 components per iteration
+            var type = gl.FLOAT;   // the data is 32bit floats
+            var normalize = false; // don't normalize the data
+            var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+            var offset = 0;        // start at the beginning of the buffer
+            gl.vertexAttribPointer(
+                texcoordLocation, size, type, normalize, stride, offset)
+            gl.enableVertexAttribArray(texcoordLocation);
+            gl.vertexAttribPointer(texcoordLocation, 2, gl.FLOAT, false, 0, 0);
+            
+            var matrix = m4.orthographic(0, gl.canvas.width, gl.canvas.height, 0, -1, 1);
+            matrix = m4.translate(matrix, 0, 0, 0);
+            matrix = m4.scale(matrix, 1200, 675, 1);
+            gl.uniformMatrix4fv(matrixLocation, false, matrix);
+            gl.uniform1i(textureLocation, 0);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            
+            gl.deleteTexture(tex);
+        }
+
+        function draw() {
+            //webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+            var b=$('.background')[0];
+            var ctx=b.getContext("2d");
+
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            // Tell WebGL how to convert from clip space to pixels
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    
+            // Tell WebGL to use our shader program pair
+            gl.useProgram(program);
+            
+            drawContextToGl(ctx);
+            //drawContextToGl(lc.ctx);
+        }
+
+        function render() {
+            draw();
+            requestAnimationFrame(render);
+        }
+        requestAnimationFrame(render);
+
+        //render_gl();
+    
+        function render_gl() {
+ 
+            window.requestAnimationFrame(render_gl, shaderCanvas);
+          }
+        
+        function bounce() {
+            $('.background')[0].getContext("2d").drawImage(lc.getImage({scaleDownRetina:true}),0,0);
+            lc.clear();
+        }
 
         var save = function() {
             localStorage.setItem('drawing-'+brick_id, JSON.stringify(lc.getSnapshot()));
         }
 
         lc.on('drawingChange', save);
+        lc.on('shapeSave', bounce);
         lc.on('pan', save);
         lc.on('zoom', save);
 
@@ -279,9 +658,6 @@ $(document).ready(function() {
     $('#show-lc').click(function() {
     if (!lc) { showLC(); }
     });
-    //console.log('set height');
-    //$('.fs-container').height('2000px');
-    //set_canvas_height();
 
     $("#color-picker").spectrum({
         showButtons: false,
@@ -297,18 +673,10 @@ $(document).ready(function() {
 });
 
 $( window ).resize(function() {
-    //set_canvas_height();
 });
 
 function set_canvas_height() {
     aspect_ratio=$(document).width() / $(document).height();
     new_height=Math.floor($('.fs-container').width()/aspect_ratio);
     $('.fs-container').height(new_height+'px');
-    //window.demoLC.setImageSize($('.fs-container').width(),new_height)
 }
-
-// function update(picker) {
-//     console.log('setting primary color:' + picker.toRGBString())
-//     window.demoLC.setColor('primary', picker.toRGBString())
-// }
-

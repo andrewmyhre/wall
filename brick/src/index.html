@@ -28,12 +28,14 @@
         height: 100%;
         background-color: transparent;
       }
-      .background {
+      .layer {
         width: 1200px;
         height:675px;
         margin-left: 0px;
         margin-top:0px;
         position:absolute;
+        top:0;
+        left:0;
       }
 
       .literally img.background, .literally > canvas {
@@ -98,7 +100,8 @@
 
   <body>
     <div class="fs-container">
-      <canvas class="background" width="1200" height"675"></canvas>
+      <canvas class="layer background" id="backgroundCanvas" width="1200" height"675" style="display:none"></canvas>
+      <canvas class="layer shader" id="shaderCanvas" width="1200" height"675"></canvas>
       <div class="literally"></div>
 
       <div class="toolbar">
@@ -158,6 +161,7 @@
       integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
       crossorigin="anonymous"></script>
     <script src="/static/js/literallycanvas-core.js?1"></script>
+    <script src="m4.js?1"></script>
     <script src="Brush.js?1"></script>
     <script src="brick.js?1"></script>
     <script src='spectrum.js'></script>
@@ -166,5 +170,18 @@
     <script type="text/javascript">
       
     </script>
+
+    <script id="2d-vertex-shader" type="x-shader/x-vertex"> //  <![CDATA[
+      attribute vec2 a_position;
+      void main() {
+        gl_Position = vec4(a_position, 0, 1);
+      }
+      // ]]></script>
+
+      <script id="2d-fragment-shader" type="x-shader/x-fragment"> //  <![CDATA[
+        void main() {
+          gl_Fragcolor = vec4(gl_FragCoord.x / 1200.0, gl_FragCoord.y / 675.0, 0, 1);
+        }
+        // ]]></script>
   </body>
 </html>
