@@ -1,107 +1,17 @@
 <!doctype html>
 <html>
   <head>
-    <title>Literally Canvas</title>
+    <title>wall - andrew-myhre.com</title>
     <link href="/static/css/literallycanvas.css" rel="stylesheet">
+    <link href="brick.css" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, user-scalable=no" />
-
-    <style type="text/css">
-      body {
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-        margin: 0;
-        background-color: gray;
-        height: 100%;
-        overflow:hidden;
-      }
-
-      .fs-container {
-       width: 1200px;
-       height:675px;
-       margin-left: 0px;
-       margin-top:0px;
-       background-color:white;
-      }
-
-      .literally {
-        width: 100%;
-        height: 100%;
-        background-color: transparent;
-      }
-      .layer {
-        width: 1200px;
-        height:675px;
-        margin-left: 0px;
-        margin-top:0px;
-        position:absolute;
-        top:0;
-        left:0;
-      }
-
-      .literally img.background, .literally > canvas {
-        position: absolute;
-      }
-
-      .toolset {
-        margin: 1rem;
-      }
-
-      .tool {
-        background: hsla(199, 26%, 44%, 0.5);
-        padding: 0.25rem;
-        margin: 0.25rem;
-        border-radius: 0.25rem;
-        color: #000;
-        text-align: center;
-        text-decoration: none;
-        position: relative; // give after context later
-      }
-
-      .tool.current {
-        color: #fff;
-        background: hsla(199, 26%, 44%, 1);
-      }
-
-      .tool:hover {
-        text-decoration: underline;
-        background: hsla(199, 26%, 44%, 0.75);
-      }
-
-      .toolLabel {
-        font-size: 1.25rem;
-      }
-
-      #tools-sizes.disabled {
-        pointer-events: none;
-      }
-
-      #tools-sizes.disabled .tool:after {
-        content: ' ';
-        background: hsla(0, 100%, 100%, 0.75);
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        border-radius: 0.25rem;
-      }
-
-      .toolbar {
-        position:fixed;
-        z-index:100;
-        top:0px;
-        left:0px;
-        width:auto;
-        height:auto;
-        background-color:darkgrey;
-      }
-    </style>
   </head>
 
   <body>
     <div class="fs-container">
-      <canvas class="layer background" id="backgroundCanvas" width="1200" height"675" style="display:none"></canvas>
-      <canvas class="layer shader" id="shaderCanvas" width="1200" height"675"></canvas>
+      <canvas class="layer background" id="backgroundCanvas" style="display:none"></canvas>
+      <canvas class="layer shader" id="shaderCanvas"></canvas>
       <div class="literally"></div>
 
       <div class="toolbar">
@@ -155,6 +65,7 @@
       <br>
       <div class="svg-container"
           style="display: inline-block; border: 1px solid yellow"></div>
+      <div id="notes"></div>
     </div>
 
     <script
@@ -164,25 +75,9 @@
     <script src="/static/js/literallycanvas-core.js?1"></script>
     <script src="m4.js?1"></script>
     <script src="Brush.js?1"></script>
-    <script src="brick.js?1"></script>
+    <script src="brick.js?3"></script>
     <script src='spectrum.js'></script>
     <link rel='stylesheet' href='spectrum.css' />
 
-    <script type="text/javascript">
-      
-    </script>
-
-    <script id="2d-vertex-shader" type="x-shader/x-vertex"> //  <![CDATA[
-      attribute vec2 a_position;
-      void main() {
-        gl_Position = vec4(a_position, 0, 1);
-      }
-      // ]]></script>
-
-      <script id="2d-fragment-shader" type="x-shader/x-fragment"> //  <![CDATA[
-        void main() {
-          gl_Fragcolor = vec4(gl_FragCoord.x / 1200.0, gl_FragCoord.y / 675.0, 0, 1);
-        }
-        // ]]></script>
   </body>
 </html>

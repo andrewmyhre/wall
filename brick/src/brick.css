@@ -1,0 +1,102 @@
+html { height:100%;}
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: 0;
+  background-color: gray;
+  overflow:hidden;
+  min-height: 100%;
+}
+
+.fs-container {
+ margin-left: 0px;
+ margin-top:0px;
+ background-color:white;
+ position:relative;
+ width:1024px;
+ height:576px;
+}
+
+.literally {
+  background-color: transparent;
+  position: static;
+  width:1024px;
+  height:576px;
+}
+.layer {
+  width: 1024px;
+  height: 576px;
+  margin: 0 0 0 -512px;
+  /* margin-left: auto; */
+  /* margin-right: auto; */
+  margin-top: 0px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+}
+
+.literally img.background, .literally > canvas {
+  position: absolute;
+}
+
+.toolset {
+  margin: 1rem;
+}
+
+.tool {
+  background: hsla(199, 26%, 44%, 0.5);
+  padding: 0.25rem;
+  margin: 0.25rem;
+  border-radius: 0.25rem;
+  color: #000;
+  text-align: center;
+  text-decoration: none;
+  position: relative; // give after context later
+}
+
+.tool.current {
+  color: #fff;
+  background: hsla(199, 26%, 44%, 1);
+}
+
+.tool:hover {
+  text-decoration: underline;
+  background: hsla(199, 26%, 44%, 0.75);
+}
+
+.toolLabel {
+  font-size: 1.25rem;
+}
+
+#tools-sizes.disabled {
+  pointer-events: none;
+}
+
+#tools-sizes.disabled .tool:after {
+  content: ' ';
+  background: hsla(0, 100%, 100%, 0.75);
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 0.25rem;
+}
+
+.toolbar {
+  position:fixed;
+  z-index:100;
+  top:0px;
+  left:0px;
+  width:auto;
+  height:auto;
+  background-color:darkgrey;
+}
+
+#notes {
+  position: fixed;
+  z-index:1000;
+  bottom:0;
+  left:0;
+  background-color: #BBB;
+  /*display:none;*/
+}

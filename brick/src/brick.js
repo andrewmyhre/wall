@@ -2,6 +2,7 @@
 
 var api_host, brick_host, wall_host;
 var zoom_level, brick_id, base_image, shaderCanvas, gl, program;
+var image_width=1024, image_height=576;
 if (window.location.hostname == 'localhost') {
     api_host='http://localhost:38000'
     brick_host='http://localhost:30080'
@@ -11,6 +12,29 @@ if (window.location.hostname == 'localhost') {
     brick_host='http://brick.andrew-myhre.com'
     wall_host='http://wall.andrew-myhre.com'
 }
+function update_screen_dimensions() {
+    var w=screen.width, h=screen.height;
+    if (h > w) {
+        image_width = h; 
+        image_height = h * 0.512 ;
+    } else {
+        image_width = w; 
+        image_height = w * 0.512 ;
+    }
+    $('.fs-container').width(image_width+'px');
+    $('.fs-container').height(image_height+'px');
+    $('.literally').width(image_width+'px');
+    $('.literally').height(image_height+'px');
+    $('#shaderCanvas').width(image_width+'px');
+    $('#shaderCanvas').height(image_height+'px');
+    $('#shaderCanvas').attr('width',image_width);
+    $('#shaderCanvas').attr('height',image_height);
+    $('#shaderCanvas').css('margin','0 0 0 -'+(image_width/2)+'px');
+    if (window.demoLC){
+        window.demoLC.setImageSize(image_width,image_height);
+    }
+}
+update_screen_dimensions();
 
 zoom_level=1;
 $(document).ready(function() {
@@ -34,21 +58,36 @@ $(document).ready(function() {
     var containerOne = document.getElementsByClassName('literally')[0];
     
     var showLC = function() {
+        var background=$('.background')[0];
+        var backgroundContext=background.getContext('2d');
         lc = LC.init(containerOne, {
-            snapshot: JSON.parse(localStorage.getItem('drawing-'+brick_id)),
+            //snapshot: JSON.parse(localStorage.getItem('drawing-'+brick_id)),
             defaultStrokeWidth: 10,
             strokeWidths: [10, 20, 50],
             secondaryColor: 'transparent',
-            imageSize: {width: 1200, height: 675}
+            imageSize: {width: image_width, height: image_height}
         });
+        lc.setZoom(1);
+        $( window ).resize(function() {
+            // lc.setImageSize(window.innerWidth, window.innerHeight);
+            // $(lc.containerEl).width(window.innerWidth);
+            // $(lc.containerEl).height(window.innerHeight);
+            update_screen_dimensions();
+            $('#notes').html('screen:'+screen.width+','+screen.height +
+                ', window:'+window.innerWidth+','+window.innerHeight+
+                ', dpr:'+window.devicePixelRatio);
+        });
+
+        $('#notes').html('screen:'+screen.width+','+screen.height +
+                ', window:'+window.innerWidth+','+window.innerHeight+
+                ', dpr:'+window.devicePixelRatio);
 
         base_image = new Image();
         base_image.crossOrigin='Anonymous';
         base_image.src = api_host+'/bricks/'+brick_id;
         
-        var b=$('.background')[0];
-        b.width=lc.width;
-        b.height=lc.height;
+        background.width=lc.width;
+        background.height=lc.height;
         window.demoLC = lc;
 
         shaderCanvas=document.getElementById('shaderCanvas');
@@ -351,21 +390,19 @@ $(document).ready(function() {
         
         base_image.onload = function()
         {
-            var b=$('.background')[0];
-            var ctx=b.getContext("2d");
-            ctx.drawImage(base_image, 0, 0, 1200, 675);
+            backgroundContext.drawImage(base_image, 0, 0, image_width, image_height);
         }
 
         function drawContextToGl(ctx) {
             var tex = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, tex);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, ctx.getImageData(0,0,1200,675));
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, ctx.getImageData(0,0,image_width, image_height));
 
             // let's assume all images are not a power of 2
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.uniform2f(textureSizeLocation, 1200, 675);
+            gl.uniform2f(textureSizeLocation, image_width, image_height);
             gl.uniform1fv(kernel1Location, kernels['emboss']);
             gl.uniform1fv(kernel2Location, kernels['gaussianBlur']);
             gl.uniform1f(kernelWeightLocation, computeKernelWeight(kernels[kernelInUse]));
@@ -398,7 +435,7 @@ $(document).ready(function() {
             
             var matrix = m4.orthographic(0, gl.canvas.width, gl.canvas.height, 0, -1, 1);
             matrix = m4.translate(matrix, 0, 0, 0);
-            matrix = m4.scale(matrix, 1200, 675, 1);
+            matrix = m4.scale(matrix, image_width, image_height, 1);
             gl.uniformMatrix4fv(matrixLocation, false, matrix);
             gl.uniform1i(textureLocation, 0);
             gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -408,9 +445,6 @@ $(document).ready(function() {
 
         function draw() {
             //webglUtils.resizeCanvasToDisplaySize(gl.canvas);
-            var b=$('.background')[0];
-            var ctx=b.getContext("2d");
-
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -420,7 +454,7 @@ $(document).ready(function() {
             // Tell WebGL to use our shader program pair
             gl.useProgram(program);
             
-            drawContextToGl(ctx);
+            drawContextToGl(backgroundContext);
             //drawContextToGl(lc.ctx);
         }
 
@@ -438,7 +472,7 @@ $(document).ready(function() {
           }
         
         function bounce() {
-            $('.background')[0].getContext("2d").drawImage(lc.getImage({scaleDownRetina:true}),0,0);
+            backgroundContext.drawImage(lc.getImage({scaleDownRetina:true}),0,0);
             lc.clear();
         }
 
@@ -470,15 +504,15 @@ $(document).ready(function() {
         });
         $("#zoom-in").click(function() {
             lc.zoom(0.1)
-            $('.background')[0].getContext("2d").scale(lc.scale,lc.scale)
+            backgroundContext.scale(lc.scale,lc.scale)
         });
         $("#zoom-out").click(function() {
             lc.zoom(-0.1)
-            $('.background')[0].getContext("2d").scale(lc.scale,lc.scale)
+            backgroundContext.scale(lc.scale,lc.scale)
         });
 
         $("#publish-lc").click(function() {
-            $('.background')[0].getContext("2d").drawImage(lc.getImage({scaleDownRetina:true}),0,0);
+            backgroundContext.drawImage(lc.getImage({scaleDownRetina:true}),0,0);
             $('.literally').hide();
 
             $.ajax({
@@ -510,8 +544,12 @@ $(document).ready(function() {
                 tool: function() {
                     return new Brush(lc)
                 }(LC.tools.ToolWithStroke)
-            }
-            /*,{
+            }/*,{
+                name: 'tool-pan',
+                el: document.getElementById('tool-pan'),
+                tool: new LC.tools.Pan(lc)
+                }
+            ,{
             name: 'pencil',
             el: document.getElementById('tool-pencil'),
             tool: new LC.tools.Pencil(lc)
@@ -555,10 +593,6 @@ $(document).ready(function() {
             name: 'tool-polygon',
             el: document.getElementById('tool-polygon'),
             tool: new LC.tools.Polygon(lc)
-            },{
-            name: 'tool-pan',
-            el: document.getElementById('tool-pan'),
-            tool: new LC.tools.Pan(lc)
             },{
             name: 'tool-select',
             el: document.getElementById('tool-select'),
