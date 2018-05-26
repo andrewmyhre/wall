@@ -34,6 +34,18 @@ var (
 	}
 )
 
+var emboss = []float32{
+	-2, -1, 0,
+	-1, 1, 1,
+	0, 1, 2,
+}
+
+var gaussianBlur = []float32{
+	0.045, 0.122, 0.045,
+	0.122, 0.332, 0.122,
+	0.045, 0.122, 0.045,
+}
+
 var vertexShaderSource = `
     #version 410
     in vec3 vp;
@@ -124,12 +136,12 @@ func programLoop(window *glfw.Window) error {
 		0, 2, 3, // bottom triangle
 	}
 
-	vertShader, err := NewShaderFromFile("shaders/basic.vert", gl.VERTEX_SHADER)
+	vertShader, err := NewShaderFromFile("shaders/paint.vert", gl.VERTEX_SHADER)
 	if err != nil {
 		return err
 	}
 
-	fragShader, err := NewShaderFromFile("shaders/basic.frag", gl.FRAGMENT_SHADER)
+	fragShader, err := NewShaderFromFile("shaders/paint.frag", gl.FRAGMENT_SHADER)
 	if err != nil {
 		return err
 	}
@@ -158,7 +170,12 @@ func programLoop(window *glfw.Window) error {
 
 		// set texture0 to uniform0 in the fragment shader
 		texture0.Bind(gl.TEXTURE0)
-		texture0.SetUniform(shaderProgram.GetUniformLocation("ourTexture0"))
+		texture0.SetUniform(shaderProgram.GetUniformLocation("u_image"))
+
+		gl.Uniform2f(shaderProgram.GetUniformLocation("u_textureSize"), windowWidth, windowHeight)
+		gl.Uniform1fv(shaderProgram.GetUniformLocation("u_kernel_1"), 9, &emboss[0])
+		gl.Uniform1fv(shaderProgram.GetUniformLocation("u_kernel_2"), 9, &gaussianBlur[0])
+		gl.Uniform1f(shaderProgram.GetUniformLocation("u_kernelWeight"), 1.0)
 
 		gl.BindVertexArray(VAO)
 		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, unsafe.Pointer(nil))
