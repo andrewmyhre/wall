@@ -11,7 +11,7 @@ import (
 	"image"
 	"image/draw"
 	_ "image/jpeg"
-	_ "image/png"
+	"image/png"
 	"os"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	windowWidth  = 500
-	windowHeight = 500
+	windowWidth  = 1600
+	windowHeight = 900
 )
 
 var (
@@ -112,22 +112,22 @@ func programLoop(window *glfw.Window) error {
 		// top left
 		-1.0, 1.0, 0.0, // position
 		1.0, 0.0, 0.0, // Color
-		1.0, 0.0, // texture coordinates
+		0.0, 1.0, // texture coordinates
 
 		// top right
 		1.0, 1.0, 0.0,
 		0.0, 1.0, 0.0,
-		0.0, 0.0,
+		1.0, 1.0,
 
 		// bottom right
 		1.0, -1.0, 0.0,
 		0.0, 0.0, 1.0,
-		0.0, 1.0,
+		1.0, 0.0,
 
 		// bottom left
 		-1.0, -1.0, 0.0,
 		1.0, 1.0, 1.0,
-		1.0, 1.0,
+		0.0, 0.0,
 	}
 
 	indices := []uint32{
@@ -158,36 +158,49 @@ func programLoop(window *glfw.Window) error {
 		panic(err.Error())
 	}
 
-	for !window.ShouldClose() {
-		glfw.PollEvents()
+	glfw.PollEvents()
 
-		// background color
-		gl.ClearColor(0.2, 0.5, 0.5, 1.0)
-		gl.Clear(gl.COLOR_BUFFER_BIT)
+	// background color
+	gl.ClearColor(0.2, 0.5, 0.5, 1.0)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
 
-		// draw vertices
-		shaderProgram.Use()
+	// draw vertices
+	shaderProgram.Use()
 
-		// set texture0 to uniform0 in the fragment shader
-		texture0.Bind(gl.TEXTURE0)
-		texture0.SetUniform(shaderProgram.GetUniformLocation("u_image"))
+	// set texture0 to uniform0 in the fragment shader
+	texture0.Bind(gl.TEXTURE0)
+	texture0.SetUniform(shaderProgram.GetUniformLocation("u_image"))
 
-		gl.Uniform2f(shaderProgram.GetUniformLocation("u_textureSize"), windowWidth, windowHeight)
-		gl.Uniform1fv(shaderProgram.GetUniformLocation("u_kernel_1"), 9, &emboss[0])
-		gl.Uniform1fv(shaderProgram.GetUniformLocation("u_kernel_2"), 9, &gaussianBlur[0])
-		gl.Uniform1f(shaderProgram.GetUniformLocation("u_kernelWeight"), 1.0)
+	gl.Uniform2f(shaderProgram.GetUniformLocation("u_textureSize"), windowWidth, windowHeight)
+	gl.Uniform1fv(shaderProgram.GetUniformLocation("u_kernel_1"), 9, &emboss[0])
+	gl.Uniform1fv(shaderProgram.GetUniformLocation("u_kernel_2"), 9, &gaussianBlur[0])
+	gl.Uniform1f(shaderProgram.GetUniformLocation("u_kernelWeight"), 1.0)
 
-		gl.BindVertexArray(VAO)
-		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, unsafe.Pointer(nil))
-		gl.BindVertexArray(0)
+	gl.BindVertexArray(VAO)
+	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, unsafe.Pointer(nil))
+	gl.BindVertexArray(0)
 
-		texture0.UnBind()
+	texture0.UnBind()
 
-		// end of draw loop
+	screenshot := image.NewRGBA(image.Rect(0, 0, int(windowWidth), int(windowHeight)))
+	gl.ReadPixels(0, 0, windowWidth, windowHeight, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(screenshot.Pix))
 
-		// swap in the rendered buffer
-		window.SwapBuffers()
+	fo, err := os.Create("img_treated.png")
+	if err != nil {
+		panic(err)
 	}
+	defer fo.Close()
+
+	err = png.Encode(fo, screenshot)
+
+	if err != nil {
+		panic(err)
+	}
+	// end of draw loop
+
+	// swap in the rendered buffer
+	window.SwapBuffers()
+
 	return nil
 }
 
