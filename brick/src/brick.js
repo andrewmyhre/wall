@@ -536,13 +536,24 @@ $(document).ready(function() {
             });
         });
 
+        var onPointerDownEvent = function() {
+            $('.toolbar').hide();
+        }
+        var onPointerUpEvent = function() {
+            $('.toolbar').show();
+        }
+        var onPointerDragEvent = function() {
+        }
+        var onPointerMoveEvent = function() {
+        }
+
         // Set up our own tools...
         tools = [
             {
                 name: 'tool-brush',
                 el: document.getElementById('tool-brush'),
                 tool: function() {
-                    return new Brush(lc)
+                    return new Brush(lc, onPointerDownEvent, onPointerDragEvent, onPointerUpEvent, onPointerMoveEvent)
                 }(LC.tools.ToolWithStroke)
             }/*,{
                 name: 'tool-pan',
@@ -614,22 +625,14 @@ $(document).ready(function() {
             name: 50,
             el: document.getElementById('sizeTool-3'),
             size: 50
-            }
-        ];
-
-        colors = [
-            {
-            name: 'black',
-            el: document.getElementById('colorTool-black'),
-            color: '#000000'
             },{
-            name: 'blue',
-            el: document.getElementById('colorTool-blue'),
-            color: '#0000ff'
+            name: 100,
+            el: document.getElementById('sizeTool-4'),
+            size: 100
             },{
-            name: 'red',
-            el: document.getElementById('colorTool-red'),
-            color: '#ff0000'
+            name: 200,
+            el: document.getElementById('sizeTool-5'),
+            size: 200
             }
         ];
 
@@ -673,16 +676,6 @@ $(document).ready(function() {
             })
         })
         setCurrentByName(strokeWidths, strokeWidths[0].name);
-
-        // Wire Colors
-        colors.forEach(function(clr) {
-            $(clr.el).click(function() {
-            lc.setColor('primary', clr.color)
-            setCurrentByName(colors, clr.name);
-            })
-        })
-        setCurrentByName(colors, colors[0].name);
-
     };
 
     $(document).ready(function() {
@@ -731,13 +724,14 @@ $(document).ready(function() {
         showButtons: false,
         change: function(color) {
             window.demoLC.setColor('primary', color.toRgbString())
-            $('#color-picker').css('color',color.toRgbString())
+            $('#color-picker').css('background',color.toRgbString())
         },
         move: function(color) {
             window.demoLC.setColor('primary', color.toRgbString())
-            $('#color-picker').css('color',color.toRgbString())
+            $('#color-picker').css('background',color.toRgbString())
         }
     });
+    $('#color-picker').css('background','#000000')
 });
 
 $( window ).resize(function() {

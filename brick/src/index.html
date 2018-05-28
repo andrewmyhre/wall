@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>wall - andrew-myhre.com</title>
-    <link href="/static/css/literallycanvas.css" rel="stylesheet">
+    <link href="/static/literallycanvas/css/literallycanvas.css" rel="stylesheet">
     <link href="brick.css" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, user-scalable=no" />
@@ -16,26 +16,25 @@
 
       <div class="toolbar">
         <div class="toolset">
-          <a href="javascript:void(0);" class='tool' id="clear-lc">Reset</a>
-          <a href="javascript:void(0);" class='tool' id="publish-lc">Publish</a>
+          <!--<a href="javascript:void(0);" class='tool' id="clear-lc">Reset</a>-->
+          <a href="javascript:void(0);" class='tool publish' id="publish-lc"><img src="/static/icons/publish.png" /></a>
           <!--<a href="javascript:void(0);" class='tool' id="tool-pencil">Pencil</a>-->
-          <a href="javascript:void(0);" class='tool' id="tool-brush">Brush</a>
+          <!--<a href="javascript:void(0);" class='tool' id="tool-brush">Brush</a>-->
           <!--<a href="javascript:void(0);" class='tool' id="tool-pan">Pan</a>-->
           <!--<a href="javascript:void(0);" class='tool' id="zoom-in">ZoomIn</a>
           <a href="javascript:void(0);" class='tool' id="zoom-out">ZoomOut</a>-->
-          <a href="javascript:void(0);" class='tool' id='color-picker'>Color</a>
+          <a href="javascript:void(0);" class='tool' id='color-picker'><img src="/static/icons/color.png" /></a>
           <!-- <input value="000000" class="tool jscolor {position:'right',
             borderColor:'#FFF #666 #666 #FFF',
             insetColor:'#666 #FFF #FFF #666',
             backgroundColor:'#CCC', onFineChange:'update(this)'}"> -->
-          <a href="javascript:void(0);" class='tool' id="toggle-fullscreen">Fullscreen</a>
-        </div>
-        <div class="toolset">
-            <span class='toolLabel'>Size:</span>
-            <a href="javascript:void(0);" class='tool' id="sizeTool-1">small</a>
-            <a href="javascript:void(0);" class='tool' id="sizeTool-2">medium</a>
-            <a href="javascript:void(0);" class='tool' id="sizeTool-3">big</a>
-        </div>
+          <a href="javascript:void(0);" class='tool' id="toggle-fullscreen"><img src="/static/icons/fullscreen.png" /></a>
+          <a href="javascript:void(0);" class='tool' id="sizeTool-1"><img src="/static/icons/size_1.png" /></a>
+          <a href="javascript:void(0);" class='tool' id="sizeTool-2"><img src="/static/icons/size_2.png" /></a>
+          <a href="javascript:void(0);" class='tool' id="sizeTool-3"><img src="/static/icons/size_3.png" /></a>
+          <a href="javascript:void(0);" class='tool' id="sizeTool-4"><img src="/static/icons/size_4.png" /></a>
+          <a href="javascript:void(0);" class='tool' id="sizeTool-5"><img src="/static/icons/size_5.png" /></a>
+      </div>
 
         <!--
         <div class="toolset">
@@ -72,7 +71,7 @@
       src="https://code.jquery.com/jquery-2.2.4.min.js"
       integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
       crossorigin="anonymous"></script>
-    <script src="/static/js/literallycanvas-core.js?1"></script>
+    <script src="/static/literallycanvas/js/literallycanvas-core.js?1"></script>
     <script src="m4.js?1"></script>
     <script src="Brush.js?1"></script>
     <script src="brick.js?4"></script>

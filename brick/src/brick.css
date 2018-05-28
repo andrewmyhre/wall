@@ -39,28 +39,34 @@ body {
 }
 
 .toolset {
-  margin: 1rem;
+  margin: 0;
 }
 
 .tool {
-  background: hsla(199, 26%, 44%, 0.5);
-  padding: 0.25rem;
-  margin: 0.25rem;
-  border-radius: 0.25rem;
   color: #000;
   text-align: center;
   text-decoration: none;
-  position: relative; // give after context later
+  background: #bbbbbb7a;
+  display: inline-block;
+  position: relative; // give after context later 
 }
 
-.tool.current {
-  color: #fff;
-  background: hsla(199, 26%, 44%, 1);
+.tool img {
+  position: relative
 }
 
 .tool:hover {
+  background: hsla(234, 97%, 63%, 0.28);
   text-decoration: underline;
-  background: hsla(199, 26%, 44%, 0.75);
+}
+.tool:active {
+  background: hsla(123, 95%, 57%, 0.49);
+}
+
+
+.tool.current {
+  color: #fff;
+  background: rgb(37, 88, 114);
 }
 
 .toolLabel {
