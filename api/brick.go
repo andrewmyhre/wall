@@ -7,21 +7,21 @@ import (
 )
 
 type Brick struct {
-	ID                      string `json:"id,omitempty"`
-	ImageStoragePath        string `json:"omit"`
-	TreatedImageStoragePath string `json:"omit"`
-	ThumbnailStoragePath    string `json:"omit"`
-	ImageURL                string `json:"image_url,omitempty"`
-	TreatedImageURL         string `json:"treated_url,omitempty"`
-	ThumbnailImageURL       string `json:"thumbnail_url,omitempty"`
-	CreationDate            string `json:"creationDate,omitempty"`
-	ETag                    string `json:"etag,omitempty"`
+	ID                      string         `json:"id,omitempty"`
+	ImageStoragePath        string         `json:"omit"`
+	TreatedImageStoragePath sql.NullString `json:"omit"`
+	ThumbnailStoragePath    string         `json:"omit"`
+	ImageURL                string         `json:"image_url,omitempty"`
+	TreatedImageURL         string         `json:"treated_url,omitempty"`
+	ThumbnailImageURL       string         `json:"thumbnail_url,omitempty"`
+	CreationDate            string         `json:"creationDate,omitempty"`
+	ETag                    string         `json:"etag,omitempty"`
 }
 
 func GetBrick(db *sql.DB, id string) (Brick, error) {
 	var (
 		imageStoragePath        string
-		treatedImageStoragePath string
+		treatedImageStoragePath sql.NullString
 		thumbnailStoragePath    string
 		eTag                    string
 		creationDate            string
@@ -66,7 +66,7 @@ func GetBricks(db *sql.DB) []Brick {
 		id                      string
 		imageStoragePath        string
 		thumbnailStoragePath    string
-		treatedImageStoragePath string
+		treatedImageStoragePath sql.NullString
 		eTag                    string
 		creationDate            string
 		bricks                  []Brick

@@ -78,8 +78,9 @@ func ApiPutBrick(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(422) // unprocessable entity
 		if err := json.NewEncoder(w).Encode(err); err != nil {
-			log.Fatal(err)
+			log.Println(err.Error())
 		}
+		return
 	}
 
 	i := strings.Index(imageDataObject.ImageData, ",")
@@ -143,7 +144,7 @@ func ApiPutBrick(w http.ResponseWriter, req *http.Request) {
 	brick.CreationDate = fmt.Sprintf("%d", time.Now().UTC())
 	brick.ETag = fmt.Sprintf("%d", time.Now().UTC().Unix())
 	brick.ImageStoragePath = imagePath_Original_Full
-	brick.TreatedImageStoragePath = imagePath_Treated_Full
+	brick.TreatedImageStoragePath = sql.NullString{String: imagePath_Treated_Full, Valid: true}
 	brick.ThumbnailStoragePath = imagePath_Thumbnail
 
 	defer req.Body.Close()
@@ -167,7 +168,7 @@ func ApiGetBrickImage(w http.ResponseWriter, r *http.Request) {
 
 	imagedata, err := ioutil.ReadFile(brick.ImageStoragePath)
 	if err != nil {
-		log.Println(err.Error())
+		log.Printf("%s: %s\n", brick.ImageStoragePath, err.Error())
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -180,8 +181,13 @@ func ApiGetTreatedBrickImage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "image/png")
 	vars := mux.Vars(r)
 	brick, err := GetBrick(shared_db, vars["id"])
+	if !brick.TreatedImageStoragePath.Valid {
+		log.Printf("Request for treated image for brick %s but brick doesn't have a treated image\n", vars["id"])
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 
-	imagedata, err := ioutil.ReadFile(brick.TreatedImageStoragePath)
+	imagedata, err := ioutil.ReadFile(brick.TreatedImageStoragePath.String)
 	if err != nil {
 		log.Println(err.Error())
 		w.WriteHeader(http.StatusNotFound)
@@ -197,14 +203,14 @@ func ApiGetBrickThumbnail(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	brick, err := GetBrick(shared_db, vars["id"])
 	if err != nil {
-		log.Println(err.Error())
+		log.Printf("%s: %s\n", brick.ThumbnailStoragePath, err.Error())
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	imagedata, err := ioutil.ReadFile(brick.ThumbnailStoragePath)
 	if err != nil {
-		log.Println(err.Error())
+		log.Printf("%s: %s\n", brick.ThumbnailStoragePath, err.Error())
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
