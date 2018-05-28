@@ -11,7 +11,7 @@ import (
 var RootConnectionString = strings.Join([]string{os.Getenv("MYSQL_USERNAME"), ":", os.Getenv("MYSQL_PASSWORD"), "@tcp(", os.Getenv("MYSQL_HOST"), ":", os.Getenv("MYSQL_PORT"), ")/"}, "")
 var DbConnectionString = strings.Join([]string{os.Getenv("MYSQL_USERNAME"), ":", os.Getenv("MYSQL_PASSWORD"), "@tcp(", os.Getenv("MYSQL_HOST"), ":", os.Getenv("MYSQL_PORT"), ")/wall"}, "")
 
-var revisions = []interface{}{Revision1}
+var revisions = []interface{}{Revision1, Revision2, Revision3}
 
 func ProvisionDatabase() error {
 	rootConn, err := sql.Open("mysql", RootConnectionString)
@@ -28,13 +28,49 @@ func ProvisionDatabase() error {
 	}
 	defer conn.Close()
 
+	err = EnsureRevisionsTableExists(conn)
+	if err != nil {
+		log.Panic(err)
+	}
 	revision := GetRevision(conn)
 	log.Printf("Database is at revision %d\n", revision)
 
 	revision++
 	for revision <= len(revisions) {
 		log.Printf("Applying revision %d\n", revision)
-		revisions[revision-1].(func(*sql.DB))(conn)
+
+		rows, err := conn.Query("SELECT * from db_revisions WHERE revision=?", revision)
+		if err != nil {
+			log.Panic(err)
+		}
+		if !rows.Next() {
+			st2, err := conn.Prepare(`INSERT INTO db_revisions VALUES (?,?,?)`)
+			if err != nil {
+				log.Panic(err)
+			}
+			defer st2.Close()
+			_, err = st2.Exec(revision, time.Now().UTC().String(), false)
+			if err != nil {
+				log.Panic(err)
+			}
+		}
+
+		completed, err := revisions[revision-1].(func(*sql.DB) (int, error))(conn)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		st3, err := conn.Prepare(`UPDATE db_revisions set AppliedSuccessfully=? WHERE revision=?`)
+		if err != nil {
+			log.Panic(err)
+		}
+		defer st3.Close()
+		_, err = st3.Exec(true, completed)
+		if err != nil {
+			log.Panic(err)
+		}
+		log.Printf("Updated database to revision %d\n", completed)
+
 		revision++
 	}
 
@@ -78,6 +114,24 @@ func Initialize(conn *sql.DB) error {
 	return nil
 }
 
+func EnsureRevisionsTableExists(conn *sql.DB) error {
+	st1, err := conn.Prepare(`CREATE TABLE IF NOT EXISTS ` + "`db_revisions`" + ` (
+    ` + "`revision`" + ` SMALLINT NOT NULL,
+		` + "`DateApplied`" + ` DATETIME,
+		` + "`AppliedSuccessfully`" + ` BOOL,
+    PRIMARY KEY (` + "`revision`" + `)
+	);`)
+	if err != nil {
+		log.Panic(err)
+	}
+	defer st1.Close()
+	_, err = st1.Exec()
+	if err != nil {
+		log.Panic(err)
+	}
+	return nil
+}
+
 func GetRevision(conn *sql.DB) int {
 	log.Println("Getting current database revision..")
 	rows, err := conn.Query(`SELECT 1 FROM db_revisions LIMIT 1;`)
@@ -87,7 +141,7 @@ func GetRevision(conn *sql.DB) int {
 	defer rows.Close()
 
 	var revision int
-	rows2, err := conn.Query(`select max(revision) from db_revisions where AppliedSuccessfully=true`)
+	rows2, err := conn.Query(`select coalesce(max(revision),0) from db_revisions where AppliedSuccessfully=true`)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -124,35 +178,8 @@ func mysql_exec(db *sql.DB, command string) error {
 	return nil
 }
 
-func Revision1(conn *sql.DB) {
+func Revision1(conn *sql.DB) (int, error) {
 	log.Println("Applying database revision 1..")
-	st1, err := conn.Prepare(`CREATE TABLE IF NOT EXISTS ` + "`db_revisions`" + ` (
-    ` + "`revision`" + ` SMALLINT NOT NULL,
-		` + "`DateApplied`" + ` DATETIME,
-		` + "`AppliedSuccessfully`" + ` BOOL,
-    PRIMARY KEY (` + "`revision`" + `)
-	);`)
-	if err != nil {
-		log.Panic(err)
-	}
-	defer st1.Close()
-	_, err = st1.Exec()
-	if err != nil {
-		log.Panic(err)
-	}
-
-	revisionRow, err := conn.Query(`select * from db_revisions where revision = 1`)
-	if !revisionRow.Next() {
-		st2, err := conn.Prepare(`INSERT INTO db_revisions VALUES (?,?,?)`)
-		if err != nil {
-			log.Panic(err)
-		}
-		defer st2.Close()
-		_, err = st2.Exec(1, time.Now().UTC().String(), false)
-		if err != nil {
-			log.Panic(err)
-		}
-	}
 
 	st3, err := conn.Prepare(`ALTER TABLE bricks
 ADD COLUMN TreatedImageStoragePath VARCHAR(1024) AFTER ImageStoragePath`)
@@ -164,14 +191,26 @@ ADD COLUMN TreatedImageStoragePath VARCHAR(1024) AFTER ImageStoragePath`)
 	if err != nil {
 		log.Panic(err)
 	}
+	return 1, nil
+}
 
-	st4, err := conn.Prepare(`UPDATE db_revisions set AppliedSuccessfully=? WHERE revision=?`)
+func Revision2(conn *sql.DB) (int, error) {
+	st1, err := conn.Prepare(`CREATE TABLE IF NOT EXISTS ` + "`metadata`" + ` (
+    ` + "`ID`" + ` INT NOT NULL,
+		` + "`ETag`" + ` VARCHAR(128) NULL,
+    PRIMARY KEY (` + "`ID`" + `)
+	);`)
 	if err != nil {
 		log.Panic(err)
 	}
-	defer st4.Close()
-	_, err = st4.Exec(true, 1)
+	defer st1.Close()
+	_, err = st1.Exec()
 	if err != nil {
 		log.Panic(err)
 	}
+	return 2, nil
+}
+
+func Revision3(conn *sql.DB) (int, error) {
+	return 3, nil
 }

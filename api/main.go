@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/base64"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"hash/crc32"
 	"io"
 	"io/ioutil"
 	"log"
@@ -27,6 +30,10 @@ type ImageDataPackage struct {
 
 type PublishBrickResponse struct {
 	Result string `json:"result,omitempty"`
+}
+
+func init() {
+	gob.Register(Brick{})
 }
 
 func main() {
@@ -60,8 +67,18 @@ func main() {
 }
 
 func ApiGetBricks(w http.ResponseWriter, req *http.Request) {
-	var bricks = GetBricks(shared_db)
+	var metadata = GetMetadata(shared_db)
 	w.Header().Set("Content-Type", "application/json")
+	if metadata.Valid {
+		w.Header().Set("ETag", metadata.String)
+
+		if req.Header.Get("If-None-Match") == metadata.String {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+	}
+
+	var bricks = GetBricks(shared_db)
 	json.NewEncoder(w).Encode(bricks)
 }
 
@@ -150,6 +167,21 @@ func ApiPutBrick(w http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	SaveBrick(shared_db, brick)
 	w.WriteHeader(http.StatusOK)
+
+	var bricks = GetBricks(shared_db)
+	b := bytes.Buffer{}
+	e := gob.NewEncoder(&b)
+	err = e.Encode(bricks)
+	if err != nil {
+		fmt.Println(`failed gob Encode`, err)
+	}
+	etag := fmt.Sprintf(`W/%08X`, crc32.ChecksumIEEE(b.Bytes()))
+	log.Printf("gob: %s\n", etag)
+
+	err = UpdateMetadata(shared_db, etag)
+	if err != nil {
+		log.Printf("Failed to update metadata: %s\n", err.Error())
+	}
 
 	result := PublishBrickResponse{Result: "OK"}
 	json.NewEncoder(w).Encode(result)

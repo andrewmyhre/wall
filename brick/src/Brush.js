@@ -1,11 +1,13 @@
 var Brush = function(lc, onPointerDownEvent, onPointerDragEvent, onPointerUpEvent, onPointerMoveEvent) {  // take lc as constructor arg
     var self = this;
 
-    Brush.prototype.setNextBlot = function() {
-      self.nextBlot=Math.floor(Math.random()*400);
+    maxBlotWait=200
+    Brush.prototype.setNextBlot = function(velocity) {
+      if (velocity>=maxBlotWait) {velocity=maxBlotWait-1}
+      self.nextBlot=Math.floor(Math.random()*(maxBlotWait-velocity));
     }
     self.blotFactor=0;
-    self.setNextBlot();
+    self.setNextBlot(0);
     self.lastPt=null;
 
     Brush.prototype.vary = function(lc,pt) {
@@ -18,9 +20,9 @@ var Brush = function(lc, onPointerDownEvent, onPointerDragEvent, onPointerUpEven
       self.nextBlot-=velocity_s;
       if (self.nextBlot <= 0)
       {
-        if (velocity_s < 4) { velocity_s=1;}
-        self.blotFactor=(velocity_s/4);
-        self.setNextBlot();
+        if (velocity_s < 2) { velocity_s=1;}
+        self.blotFactor=(velocity_s/3);
+        self.setNextBlot(velocity);
       }
       pointSize=lc.tool.strokeWidth*(1+self.blotFactor);
       self.blotFactor*=0.8;
@@ -59,7 +61,6 @@ var Brush = function(lc, onPointerDownEvent, onPointerDragEvent, onPointerUpEven
   
         var onPointerMove = function(pt) {
           onPointerMoveEvent();
-          //console.log("Mouse moved to", pt);
         };
   
         // lc.on() returns a function that unsubscribes us. capture it.

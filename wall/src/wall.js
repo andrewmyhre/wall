@@ -39,25 +39,35 @@ function render(bricksHash) {
                 }
             }
             if (brick != null) {
-                $($(brick_element).children()[0]).html("<img src='"+api_host+brick.thumbnail_url+"' width=200 />");
+                $($(brick_element).children()[0]).html("<img src='"+api_host+brick.thumbnail_url+"?"+brick.etag+"' width=200 />");
             }
             i++;
         }
     }
-    console.log("rendered "+column_length+" by " + row_length);
-    
+}
+
+function updateWall()
+{
+    var wall=$("#wall");
+    var bricks=null;
+    $.ajax({
+        url: api_host+'/bricks',
+        dataType: 'json',
+        ifModified: false,
+        success: function(response) {
+            bricks=response;
+            bricksHash=buildBrickHash(bricks);
+            render(bricksHash);
+        },
+        complete: function() {
+            setTimeout(updateWall, 5000);
+        }
+    })
 }
 
 $(document).ready(function(){
-    var wall=$("#wall");
-    var bricks=null;
-    $.getJSON(api_host+'/bricks', function(response) {
-        bricks=response;
-        bricksHash=buildBrickHash(bricks);
-        render(bricksHash);
-    })
-    $('#render').click(function() {render(bricksHash);})
     $( window ).resize(function() {
         render(bricksHash);
-    });        
+    });
+    updateWall();
 })

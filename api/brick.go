@@ -18,6 +18,10 @@ type Brick struct {
 	ETag                    string         `json:"etag,omitempty"`
 }
 
+type Metadata struct {
+	ETag sql.NullString
+}
+
 func GetBrick(db *sql.DB, id string) (Brick, error) {
 	var (
 		imageStoragePath        string
@@ -136,4 +140,50 @@ func SaveBrick(db *sql.DB, brick Brick) {
 			panic(err.Error()) // proper error handling instead of panic in your app
 		}
 	}
+}
+
+func GetMetadata(conn *sql.DB) sql.NullString {
+	var etag sql.NullString
+	rows, err := conn.Query("select ETag from metadata WHERE ID=1")
+	if err != nil {
+		log.Panic(err)
+	}
+	for rows.Next() {
+		err := rows.Scan(&etag)
+		if err != nil {
+			log.Panic(err)
+		}
+	}
+	return etag
+}
+
+func UpdateMetadata(conn *sql.DB, etag string) error {
+	q, err := conn.Query("SELECT etag from metadata where ID=1")
+	if err != nil {
+		log.Panic(err.Error())
+	}
+	if q.Next() {
+		stmtUpd, err := conn.Prepare("UPDATE metadata set ETag=? WHERE ID=1")
+		if err != nil {
+			log.Panic(err.Error()) // proper error handling instead of panic in your app
+		}
+		defer stmtUpd.Close() // Close the statement when we leave main() / the program terminates
+		log.Println("Updating metadata.etag")
+		_, err = stmtUpd.Exec(sql.NullString{String: etag, Valid: true})
+		if err != nil {
+			log.Panic(err.Error()) // proper error handling instead of panic in your app
+		}
+	} else {
+		stmtUpd, err := conn.Prepare("INSERT INTO metadata VALUES(?,?)")
+		if err != nil {
+			log.Panic(err.Error()) // proper error handling instead of panic in your app
+		}
+		defer stmtUpd.Close() // Close the statement when we leave main() / the program terminates
+		log.Println("Inserting metadata.etag")
+		_, err = stmtUpd.Exec(1, sql.NullString{String: etag, Valid: true})
+		if err != nil {
+			log.Panic(err.Error()) // proper error handling instead of panic in your app
+		}
+	}
+	return nil
 }
