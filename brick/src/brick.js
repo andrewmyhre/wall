@@ -84,7 +84,7 @@ $(document).ready(function() {
 
         base_image = new Image();
         base_image.crossOrigin='Anonymous';
-        base_image.src = api_host+'/bricks/'+brick_id;
+        base_image.src = api_host+'/bricks/'+brick_id+'/original.png';
         
         background.width=lc.width;
         background.height=lc.height;
